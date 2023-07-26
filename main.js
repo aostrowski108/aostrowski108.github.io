@@ -38,6 +38,19 @@ svg.append("g")
 // Function to append the SVG element to the container.
 function appendSVG(containerElement) {
     containerElement.append(svg.node());
+
+    // Add a bar for May with the value 50.
+    const mayValue = 50;
+    const xMay = x(new Date("2023-05-01"));
+    const yMay = y(mayValue);
+    const barWidth = x(new Date("2023-06-01")) - x(new Date("2023-05-01")) - 2; // 2 pixels spacing between bars
+
+    svg.append("rect")
+        .attr("x", xMay)
+        .attr("y", yMay)
+        .attr("width", barWidth)
+        .attr("height", height - marginBottom - yMay)
+        .attr("fill", "steelblue");
 }
 
 // Get the container element by ID and call the function.
