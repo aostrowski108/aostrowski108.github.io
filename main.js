@@ -92,6 +92,10 @@ fetch("results.csv")
             const awayTeam = d.away_team;
             const homeScore = +d.home_score; // Convert to a number
             const awayScore = +d.away_score; // Convert to a number
+            const date = d.date;
+            const year = +date.substring(0,4)
+            // console.log(year);
+            // console.log(typeof year);
 
             // Check if the match resulted in a draw
             if (homeScore === awayScore) {
@@ -165,6 +169,8 @@ function calculateTopTenWins2() {
                 const awayTeam = d.away_team;
                 const homeScore = +d.home_score; // Convert to a number
                 const awayScore = +d.away_score; // Convert to a number
+                const date = d.date;
+                const year = +date.substring(0,4)
 
                 // Check if the match resulted in a draw
                 if (homeScore === awayScore) {
@@ -195,84 +201,242 @@ function calculateTopTenWins2() {
 const temp = await calculateTopTenWins2()
 console.log(temp)
 
+const width = 1200;
+const height = 450;
+const margin = { top: 50, bottom: 50, left: 50, right: 50 };
+const svg = d3.select('#container')
+    .append('svg')
+    .attr('width', width - margin.left - margin.right)
+    .attr('height', height - margin.top - margin.bottom)
+    .attr("viewBox", [0, 0, width, height]);
 
-        const width = 1200;
-        const height = 450;
-        const margin = { top: 50, bottom: 50, left: 50, right: 50 };
+function renderChart(data) {
+    data.sort((a, b) => d3.descending(a.wins, b.wins));
+    const x = d3.scaleBand()
+        .domain(d3.range(data.length))
+        .range([margin.left, width - margin.right])
+        .padding(0.1);
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.wins)])
+        .range([height - margin.bottom, margin.top]);
+
+    const bars = svg.selectAll(".bar")
+        .data(data, d => d.country);
+
+    bars.enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", (d, i) => x(i))
+        .attr("y", d => y(d.wins))
+        .attr("height", d => y(0) - y(d.wins))
+        .attr("width", x.bandwidth())
+        .attr("fill", 'royalblue')
+        .on("mouseover", (event, d) => { // Show tooltip on mouseover
+            const tooltipContent = `Country: ${d.country}<br>International Wins: ${d.wins}`;
+            tooltip.style("visibility", "visible").html(tooltipContent);
+        })
+        .on("mousemove", (event) => { // Move tooltip with mouse
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px");
+        })
+        .on("mouseout", () => { // Hide tooltip on mouseout
+            tooltip.style("visibility", "hidden");
+        });
+
+    bars.attr("x", (d, i) => x(i))
+        .attr("y", d => y(d.wins))
+        .attr("height", d => y(0) - y(d.wins))
+        .attr("width", x.bandwidth());
+
+    bars.exit().remove();
+
+    svg.select(".y-axis").remove();
+    svg.append("g")
+        .attr("class", "y-axis")
+        .attr("transform", `translate(${margin.left}, 0)`)
+        .call(d3.axisLeft(y).ticks(null, "s"))
+        .attr("font-size", '20px');
+
+    svg.select(".x-axis").remove();
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x).tickFormat(i => data[i].country))
+        .attr("font-size", '20px');
+}
+
+const tooltip = d3.select("#container")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("position", "absolute")
+    .style("background-color", "rgba(0, 0, 0, 0.7)")
+    .style("color", "#fff")
+    .style("padding", "8px 12px")
+    .style("border-radius", "4px")
+    .style("font-size", "14px")
+    .style("pointer-events", "none") // Disable mouse events on the tooltip
+    .style("visibility", "hidden");
+
+// Initially, render the chart with the top ten wins data
+renderChart(temp);
+
+
+// const width = 1200;
+// const height = 450;
+// const margin = { top: 50, bottom: 50, left: 50, right: 50 };
         
-        const svg = d3.select('#container')
-            .append('svg')
-            .attr('width', width - margin.left - margin.right)
-            .attr('height', height - margin.top - margin.bottom)
-            .attr("viewBox", [0, 0, width, height]);
+// const svg = d3.select('#container')
+//     .append('svg')
+//     .attr('width', width - margin.left - margin.right)
+//     .attr('height', height - margin.top - margin.bottom)
+//     .attr("viewBox", [0, 0, width, height]);
         
-        const x = d3.scaleBand()
-            .domain(d3.range(temp.length))
-            .range([margin.left, width - margin.right])
-            .padding(0.1)
+// const x = d3.scaleBand()
+//     .domain(d3.range(temp.length))
+//     .range([margin.left, width - margin.right])
+//     .padding(0.1)
         
-        const y = d3.scaleLinear()
-            .domain([0, 800])
-            .range([height - margin.bottom, margin.top])
+// const y = d3.scaleLinear()
+//     .domain([0, 800])
+//     .range([height - margin.bottom, margin.top])
         
-        svg
-            .append("g")
-            .attr("fill", 'royalblue')
-            .selectAll("rect")
-            .data(temp.sort((a, b) => d3.ascending(a.wins, b.wins)))
-            .join("rect")
-            .attr("x", (d, i) => x(i))
-            .attr("y", d => y(d.wins))
-            .attr('title', (d) => d.wins)
-            .attr("class", "rect")
-            .attr("height", d => y(0) - y(d.wins))
-            .attr("width", x.bandwidth())
-            .on("mouseover", (event, d) => { // Show tooltip on mouseover
-                const tooltipContent = `Country: ${d.country}<br>Goals Scored: ${d.wins}`;
-                tooltip.style("visibility", "visible").html(tooltipContent);
-              })
-              .on("mousemove", (event) => { // Move tooltip with mouse
-                tooltip.style("left", (event.pageX + 10) + "px")
-                  .style("top", (event.pageY - 20) + "px");
-              })
-              .on("mouseout", () => { // Hide tooltip on mouseout
-                tooltip.style("visibility", "hidden");
-              });
+// svg
+//     .append("g")
+//     .attr("fill", 'royalblue')
+//     .selectAll("rect")
+//     .data(temp.sort((a, b) => d3.ascending(a.wins, b.wins)))
+//     .join("rect")
+//     .attr("x", (d, i) => x(i))
+//     .attr("y", d => y(d.wins))
+//     .attr('title', (d) => d.wins)
+//     .attr("class", "rect")
+//     .attr("height", d => y(0) - y(d.wins))
+//     .attr("width", x.bandwidth())
+//     .on("mouseover", (event, d) => { // Show tooltip on mouseover
+//         const tooltipContent = `Country: ${d.country}<br>International Wins: ${d.wins}`;
+//         tooltip.style("visibility", "visible").html(tooltipContent);
+//         })
+//         .on("mousemove", (event) => { // Move tooltip with mouse
+//         tooltip.style("left", (event.pageX + 10) + "px")
+//             .style("top", (event.pageY - 20) + "px");
+//         })
+//         .on("mouseout", () => { // Hide tooltip on mouseout
+//         tooltip.style("visibility", "hidden");
+//         });
 
-             // Append y-axis
-        // Append y-axis
-        svg.append("g")
-            .call(g => yAxis(g, y, margin))
-            .attr("font-size", '20px');
+// svg.append("g")
+//     .call(g => yAxis(g, y, margin))
+//     .attr("font-size", '20px');
 
-        // Append x-axis
-        svg.append("g")
-            .call(g => xAxis(g, x, temp, height, margin))
-            .attr("font-size", '20px');
+//         // Append x-axis
+// svg.append("g")
+//     .call(g => xAxis(g, x, temp, height, margin))
+//     .attr("font-size", '20px');
 
 
-        function yAxis(g, yScale, margin) {
-            g.attr("transform", `translate(${margin.left}, 0)`)
-                .call(d3.axisLeft(yScale).ticks(null, "s")) // Use "s" for abbreviated number format (e.g., 1k instead of 1000)
-        }
+// function yAxis(g, yScale, margin) {
+//     g.attr("transform", `translate(${margin.left}, 0)`)
+//         .call(d3.axisLeft(yScale).ticks(null, "s")) // Use "s" for abbreviated number format (e.g., 1k instead of 1000)
+// }
         
-        // Custom x-axis function
-        function xAxis(g, xScale, data, height, margin) { // Receive the height parameter
-            g.attr("transform", `translate(0,${height - margin.bottom})`)
-                .call(d3.axisBottom(xScale).tickFormat(i => data[i].country)) // Use country names for x-axis labels
-        }
+//         // Custom x-axis function
+// function xAxis(g, xScale, data, height, margin) { // Receive the height parameter
+//     g.attr("transform", `translate(0,${height - margin.bottom})`)
+//         .call(d3.axisBottom(xScale).tickFormat(i => data[i].country)) // Use country names for x-axis labels
+// }
 
-        const tooltip = d3.select("#container")
-            .append("div")
-            .attr("class", "tooltip")
-            .style("position", "absolute")
-            .style("background-color", "rgba(0, 0, 0, 0.7)")
-            .style("color", "#fff")
-            .style("padding", "8px 12px")
-            .style("border-radius", "4px")
-            .style("font-size", "14px")
-            .style("pointer-events", "none") // Disable mouse events on the tooltip
-            .style("visibility", "hidden");
+// const tooltip = d3.select("#container")
+//     .append("div")
+//     .attr("class", "tooltip")
+//     .style("position", "absolute")
+//     .style("background-color", "rgba(0, 0, 0, 0.7)")
+//     .style("color", "#fff")
+//     .style("padding", "8px 12px")
+//     .style("border-radius", "4px")
+//     .style("font-size", "14px")
+//     .style("pointer-events", "none") // Disable mouse events on the tooltip
+//     .style("visibility", "hidden");
 
-    console.log("test")
-    console.log(temp)
+// console.log("test")
+// console.log(temp)
+
+
+// Function to handle form submission and apply filter
+function handleFilterFormSubmit(event, data) {
+    event.preventDefault();
+
+    const form = event.target;
+    const startYear = Number(form.startYear.value);
+    const endYear = Number(form.endYear.value);
+
+    return fetch("results.csv")
+        .then(response => response.text())
+        .then(csvText => {
+            const data = d3.csvParse(csvText);
+
+            const winsByCountry = {};
+            data.forEach(d => {
+                const homeTeam = d.home_team;
+                const awayTeam = d.away_team;
+                const homeScore = +d.home_score; // Convert to a number
+                const awayScore = +d.away_score; // Convert to a number
+                const date = d.date;
+                const year = +date.substring(0,4)
+
+                // Check if the match resulted in a draw
+                if (homeScore === awayScore) {
+                    return;
+                }
+
+                // Determine the winning team and update winsByCountry
+                const winner = homeScore > awayScore ? homeTeam : awayTeam;
+                if (winner in winsByCountry && year >= startYear && year <= endYear) {
+                    winsByCountry[winner]++;
+                } else if (year >= startYear && year <= endYear) {
+                    winsByCountry[winner] = 1;
+                }
+            });
+
+            const topTenWins = Object.entries(winsByCountry)
+                .map(([country, wins]) => ({ country, wins }))
+                .sort((a, b) => b.wins - a.wins)
+                .slice(0, 10);
+            console.log("in the update");
+            console.log(topTenWins);
+            renderChart(topTenWins);
+            return topTenWins;
+        })
+        .catch(error => {
+            console.error("Error fetching or processing CSV:", error);
+            throw error; // Propagate the error to the caller if needed.
+        });
+        
+
+}
+
+function updateChart(data) {
+    // Your chart rendering code here...
+    }
+
+function filterDataByYearRange(data, startYear, endYear) {
+    if (!startYear || !endYear) {
+      return data;
+    }
+  
+    return data.filter(d => {
+      const year = Number(d.year); // Assuming you have a 'year' property in the data
+      return year >= startYear && year <= endYear;
+    });
+  }
+
+const filterForm = document.getElementById("filterForm");
+filterForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+  
+    // Wait for the promise to resolve and get the data
+    const temp = await calculateTopTenWins2();
+  
+    // Now you have the data, so you can call the function with it
+    handleFilterFormSubmit(event, temp);
+  });

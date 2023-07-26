@@ -10,7 +10,19 @@
     <h1>Wins by Country</h1>
     <div id="winsTable"></div>
 
+
+
     <div id="container"></div>
+
+    <form id="filterForm">
+        <label for="startYear">Start Year:</label>
+        <input type="number" id="startYear" name="startYear" min="1900" max="2099">
+
+        <label for="endYear">End Year:</label>
+        <input type="number" id="endYear" name="endYear" min="1900" max="2099">
+
+        <button type="submit">Filter</button>
+    </form>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script type="module" src="main.js"></script>
