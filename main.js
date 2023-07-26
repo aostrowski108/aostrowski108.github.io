@@ -280,88 +280,6 @@ const tooltip = d3.select("#container")
 
 // Initially, render the chart with the top ten wins data
 renderChart(temp);
-
-
-// const width = 1200;
-// const height = 450;
-// const margin = { top: 50, bottom: 50, left: 50, right: 50 };
-        
-// const svg = d3.select('#container')
-//     .append('svg')
-//     .attr('width', width - margin.left - margin.right)
-//     .attr('height', height - margin.top - margin.bottom)
-//     .attr("viewBox", [0, 0, width, height]);
-        
-// const x = d3.scaleBand()
-//     .domain(d3.range(temp.length))
-//     .range([margin.left, width - margin.right])
-//     .padding(0.1)
-        
-// const y = d3.scaleLinear()
-//     .domain([0, 800])
-//     .range([height - margin.bottom, margin.top])
-        
-// svg
-//     .append("g")
-//     .attr("fill", 'royalblue')
-//     .selectAll("rect")
-//     .data(temp.sort((a, b) => d3.ascending(a.wins, b.wins)))
-//     .join("rect")
-//     .attr("x", (d, i) => x(i))
-//     .attr("y", d => y(d.wins))
-//     .attr('title', (d) => d.wins)
-//     .attr("class", "rect")
-//     .attr("height", d => y(0) - y(d.wins))
-//     .attr("width", x.bandwidth())
-//     .on("mouseover", (event, d) => { // Show tooltip on mouseover
-//         const tooltipContent = `Country: ${d.country}<br>International Wins: ${d.wins}`;
-//         tooltip.style("visibility", "visible").html(tooltipContent);
-//         })
-//         .on("mousemove", (event) => { // Move tooltip with mouse
-//         tooltip.style("left", (event.pageX + 10) + "px")
-//             .style("top", (event.pageY - 20) + "px");
-//         })
-//         .on("mouseout", () => { // Hide tooltip on mouseout
-//         tooltip.style("visibility", "hidden");
-//         });
-
-// svg.append("g")
-//     .call(g => yAxis(g, y, margin))
-//     .attr("font-size", '20px');
-
-//         // Append x-axis
-// svg.append("g")
-//     .call(g => xAxis(g, x, temp, height, margin))
-//     .attr("font-size", '20px');
-
-
-// function yAxis(g, yScale, margin) {
-//     g.attr("transform", `translate(${margin.left}, 0)`)
-//         .call(d3.axisLeft(yScale).ticks(null, "s")) // Use "s" for abbreviated number format (e.g., 1k instead of 1000)
-// }
-        
-//         // Custom x-axis function
-// function xAxis(g, xScale, data, height, margin) { // Receive the height parameter
-//     g.attr("transform", `translate(0,${height - margin.bottom})`)
-//         .call(d3.axisBottom(xScale).tickFormat(i => data[i].country)) // Use country names for x-axis labels
-// }
-
-// const tooltip = d3.select("#container")
-//     .append("div")
-//     .attr("class", "tooltip")
-//     .style("position", "absolute")
-//     .style("background-color", "rgba(0, 0, 0, 0.7)")
-//     .style("color", "#fff")
-//     .style("padding", "8px 12px")
-//     .style("border-radius", "4px")
-//     .style("font-size", "14px")
-//     .style("pointer-events", "none") // Disable mouse events on the tooltip
-//     .style("visibility", "hidden");
-
-// console.log("test")
-// console.log(temp)
-
-
 // Function to handle form submission and apply filter
 function handleFilterFormSubmit(event, data) {
     event.preventDefault();
@@ -415,10 +333,6 @@ function handleFilterFormSubmit(event, data) {
 
 }
 
-function updateChart(data) {
-    // Your chart rendering code here...
-    }
-
 function filterDataByYearRange(data, startYear, endYear) {
     if (!startYear || !endYear) {
       return data;
@@ -440,3 +354,14 @@ filterForm.addEventListener("submit", async (event) => {
     // Now you have the data, so you can call the function with it
     handleFilterFormSubmit(event, temp);
   });
+
+// Function to handle the "Next" button click
+function handleNextButtonClick() {
+    // Render the filter page with the interactive chart
+    console.log("clicked next")
+    window.location.href = 'filter.html';
+    // renderFilterPage();
+}
+
+const nextButton = document.getElementById("nextButton");
+nextButton.addEventListener("click", handleNextButtonClick);
