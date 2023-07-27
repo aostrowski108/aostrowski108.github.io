@@ -1,6 +1,7 @@
 // main.js - Your D3.js code goes here
 
-import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+// import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+const d3 = window.d3;
 
 // Function to calculate top 10 wins by country in descending order
 function calculateTopTenWins2() {
@@ -25,9 +26,9 @@ function calculateTopTenWins2() {
 
                 // Determine the winning team and update winsByCountry
                 const winner = homeScore > awayScore ? homeTeam : awayTeam;
-                if (winner in winsByCountry) {
+                if (winner in winsByCountry && year <= 2012) {
                     winsByCountry[winner]++;
-                } else {
+                } else if (year <= 2012) {
                     winsByCountry[winner] = 1;
                 }
             });
@@ -104,16 +105,16 @@ function renderChart(data) {
         .call(d3.axisLeft(y).ticks(null, "s"))
         .attr("font-size", '20px');
 
-        svg.select(".y-axis-label").remove(); // Remove any existing y-axis label
-        svg.append("text")
-            .attr("class", "y-axis-label")
-            .attr("x", -40)
-            .attr("y", 300)
-            .attr("dy", "-2.5em") // Adjust the vertical position of the label
-            // .attr("transform", "rotate(-90)") // Rotate the label to be vertical
-            .style("text-anchor", "middle")
-            .style("font-size", "24px") // Set the font size here
-            .text("Wins");
+    svg.select(".y-axis-label").remove(); // Remove any existing y-axis label
+    svg.append("text")
+        .attr("class", "y-axis-label")
+        .attr("x", -40)
+        .attr("y", 300)
+        .attr("dy", "-2.5em") // Adjust the vertical position of the label
+        // .attr("transform", "rotate(-90)") // Rotate the label to be vertical
+        .style("text-anchor", "middle")
+        .style("font-size", "24px") // Set the font size here
+        .text("Wins");
 
     svg.select(".x-axis").remove();
     svg.append("g")
@@ -121,6 +122,28 @@ function renderChart(data) {
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x).tickFormat(i => data[i].country))
         .attr("font-size", '20px');
+
+    const annotations = [
+        {
+            note: {
+                label: "France enters the scene as an international powerhouse with young talent", // The text for the annotation
+                // title: "England beat Scotland to win the first international game!", // The title for the annotation
+            },
+            x: width - margin.right - 1050, // Place the annotation on the right side
+            y: 200, // y-coordinate of the annotation
+            dx: 50, // x-offset of the annotation (optional)
+            dy: -50, // y-offset of the annotation (optional)
+            color: "black",
+        }
+    ];
+        
+    const makeAnnotations = d3.annotation()
+        .type(d3.annotationLabel)
+        .annotations(annotations);
+        
+    svg.append("g")
+        .attr("class", "annotation-group")
+        .call(makeAnnotations);
 }
 
 const tooltip = d3.select("#container")
@@ -137,78 +160,25 @@ const tooltip = d3.select("#container")
 
 // Initially, render the chart with the top ten wins data
 renderChart(temp);
-// Function to handle form submission and apply filter
-function handleFilterFormSubmit(event, data) {
-    event.preventDefault();
 
-    const form = event.target;
-    const startYear = Number(form.startYear.value);
-    const endYear = Number(form.endYear.value);
-
-    return fetch("results.csv")
-        .then(response => response.text())
-        .then(csvText => {
-            const data = d3.csvParse(csvText);
-
-            const winsByCountry = {};
-            data.forEach(d => {
-                const homeTeam = d.home_team;
-                const awayTeam = d.away_team;
-                const homeScore = +d.home_score; // Convert to a number
-                const awayScore = +d.away_score; // Convert to a number
-                const date = d.date;
-                const year = +date.substring(0,4)
-
-                // Check if the match resulted in a draw
-                if (homeScore === awayScore) {
-                    return;
-                }
-
-                // Determine the winning team and update winsByCountry
-                const winner = homeScore > awayScore ? homeTeam : awayTeam;
-                if (winner in winsByCountry && year >= startYear && year <= endYear) {
-                    winsByCountry[winner]++;
-                } else if (year >= startYear && year <= endYear) {
-                    winsByCountry[winner] = 1;
-                }
-            });
-
-            const topTenWins = Object.entries(winsByCountry)
-                .map(([country, wins]) => ({ country, wins }))
-                .sort((a, b) => b.wins - a.wins)
-                .slice(0, 10);
-            console.log("in the update");
-            console.log(topTenWins);
-            renderChart(topTenWins);
-            return topTenWins;
-        })
-        .catch(error => {
-            console.error("Error fetching or processing CSV:", error);
-            throw error; // Propagate the error to the caller if needed.
-        });
-        
-
-}
-
-
-// const filterForm = document.getElementById("filterForm");
-// filterForm.addEventListener("submit", async (event) => {
-//     event.preventDefault();
-  
-//     // Wait for the promise to resolve and get the data
-//     const temp = await calculateTopTenWins2();
-  
-//     // Now you have the data, so you can call the function with it
-//     handleFilterFormSubmit(event, temp);
-//   });
 
 // Function to handle the "Next" button click
 function handleNextButtonClick() {
     // Render the filter page with the interactive chart
     console.log("clicked next")
-    window.location.href = 'start.html';
+    window.location.href = 'filter.html';
+    // renderFilterPage();
+}
+
+function handleBackButtonClick() {
+    // Render the filter page with the interactive chart
+    console.log("clicked back")
+    window.location.href = 'brazil.html';
     // renderFilterPage();
 }
 
 const nextButton = document.getElementById("nextButton");
 nextButton.addEventListener("click", handleNextButtonClick);
+
+const backButton = document.getElementById("backButton");
+backButton.addEventListener("click", handleBackButtonClick);

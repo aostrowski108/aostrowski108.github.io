@@ -1,7 +1,160 @@
 // main.js - Your D3.js code goes here
 
-// import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-const d3 = window.d3;
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+// Function to create an HTML table with the top 10 goal scorers
+function createTopScorersTable(data) {
+    const table = document.createElement("table");
+    table.innerHTML = `
+        <tr>
+            <th>Player</th>
+            <th>Goals</th>
+        </tr>
+    `;
+
+    data.forEach((player) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${player.scorer}</td>
+            <td>${player.goals}</td>
+        `;
+        table.appendChild(row);
+    });
+
+    return table;
+}
+
+// Function to create the top 10 wins table and immediately append the data
+function createTopTenWinsTable(data) {
+    const table = document.createElement("table");
+    table.innerHTML = `
+        <tr>
+            <th>Country</th>
+            <th>Wins</th>
+        </tr>
+    `;
+
+    data.forEach(({ country, wins }) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${country}</td>
+            <td>${wins}</td>
+        `;
+        table.appendChild(row);
+    });
+
+    // Get the container element and append the top 10 wins table
+    const topTenWinsContainer = document.getElementById("winsTable");
+    topTenWinsContainer.appendChild(table);
+}
+
+// Read the "goalscorers.csv" file and process the data
+fetch("goalscorers.csv")
+    .then(response => response.text())
+    .then(csvText => {
+        const data = d3.csvParse(csvText);
+        const goalScorers = {};
+
+        data.forEach(d => {
+            const scorer = d.scorer;
+            if (scorer !== "NA") {
+                if (scorer in goalScorers) {
+                    goalScorers[scorer]++;
+                } else {
+                    goalScorers[scorer] = 1;
+                }
+            }
+        });
+
+        // Convert goalScorers object to an array of objects
+        const topScorers = Object.entries(goalScorers)
+            .map(([scorer, goals]) => ({ scorer, goals }))
+            .sort((a, b) => b.goals - a.goals)
+            .slice(0, 10);
+
+        // Get the container element and append the top scorers table
+        const topScorersContainer = document.getElementById("topScorers");
+        topScorersContainer.appendChild(createTopScorersTable(topScorers));
+    })
+    .catch(error => console.error("Error fetching or processing CSV:", error));
+
+// Read the "results.csv" file and process the data
+fetch("results.csv")
+    .then(response => response.text())
+    .then(csvText => {
+        const data = d3.csvParse(csvText);
+
+        // Calculate top 10 wins by country in descending order
+        const winsByCountry = {};
+
+        data.forEach(d => {
+            const homeTeam = d.home_team;
+            const awayTeam = d.away_team;
+            const homeScore = +d.home_score; // Convert to a number
+            const awayScore = +d.away_score; // Convert to a number
+            const date = d.date;
+            const year = +date.substring(0,4)
+            // console.log(year);
+            // console.log(typeof year);
+
+            // Check if the match resulted in a draw
+            if (homeScore === awayScore) {
+                return;
+            }
+
+            // Determine the winning team and update winsByCountry
+            const winner = homeScore > awayScore ? homeTeam : awayTeam;
+            if (winner in winsByCountry) {
+                winsByCountry[winner]++;
+            } else {
+                winsByCountry[winner] = 1;
+            }
+        });
+
+        const topTenWins = Object.entries(winsByCountry)
+            .map(([country, wins]) => ({ country, wins }))
+            .sort((a, b) => b.wins - a.wins)
+            .slice(0, 10);
+
+        // Create and append the top 10 wins table
+        createTopTenWinsTable(topTenWins);
+    })
+    .catch(error => console.error("Error fetching or processing CSV:", error));
+
+    // Function to calculate top 10 wins by country and return an array of objects
+function calculateTopTenWins(data) {
+    const winsByCountry = {};
+
+    data.forEach(d => {
+        const homeTeam = d.home_team;
+        const awayTeam = d.away_team;
+        const homeScore = +d.home_score; // Convert to a number
+        const awayScore = +d.away_score; // Convert to a number
+
+        // Check if the match resulted in a draw
+        if (homeScore === awayScore) {
+            return;
+        }
+
+        // Determine the winning team and update winsByCountry
+        const winner = homeScore > awayScore ? homeTeam : awayTeam;
+        if (winner in winsByCountry) {
+            winsByCountry[winner]++;
+        } else {
+            winsByCountry[winner] = 1;
+        }
+    });
+
+    // Convert winsByCountry object to an array of objects and sort in descending order
+    const topTenWins = Object.entries(winsByCountry)
+        .map(([country, wins]) => ({ country, wins }))
+        .sort((a, b) => b.wins - a.wins)
+        .slice(0, 10);
+
+    
+    console.log(topTenWins);
+    return topTenWins;
+}
 
 // Function to calculate top 10 wins by country in descending order
 function calculateTopTenWins2() {
@@ -26,9 +179,9 @@ function calculateTopTenWins2() {
 
                 // Determine the winning team and update winsByCountry
                 const winner = homeScore > awayScore ? homeTeam : awayTeam;
-                if (winner in winsByCountry && year === 1873) {
+                if (winner in winsByCountry) {
                     winsByCountry[winner]++;
-                } else if (year === 1873) {
+                } else {
                     winsByCountry[winner] = 1;
                 }
             });
@@ -105,44 +258,12 @@ function renderChart(data) {
         .call(d3.axisLeft(y).ticks(null, "s"))
         .attr("font-size", '20px');
 
-    svg.select(".y-axis-label").remove(); // Remove any existing y-axis label
-    svg.append("text")
-        .attr("class", "y-axis-label")
-        .attr("x", -40)
-        .attr("y", 300)
-        .attr("dy", "-2.5em") // Adjust the vertical position of the label
-        // .attr("transform", "rotate(-90)") // Rotate the label to be vertical
-        .style("text-anchor", "middle")
-        .style("font-size", "24px") // Set the font size here
-        .text("Wins");
-
     svg.select(".x-axis").remove();
     svg.append("g")
         .attr("class", "x-axis")
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x).tickFormat(i => data[i].country))
         .attr("font-size", '20px');
-
-    const annotations = [
-        {
-            note: {
-                label: "England beat Scotland to win the first international game!", // The text for the annotation
-                // title: "England beat Scotland to win the first international game!", // The title for the annotation
-            },
-            x: width - margin.right - 90, // Place the annotation on the right side
-            y: 200, // y-coordinate of the annotation
-            dx: 50, // x-offset of the annotation (optional)
-            dy: 50, // y-offset of the annotation (optional)
-        }
-    ];
-        
-    const makeAnnotations = d3.annotation()
-        .type(d3.annotationLabel)
-        .annotations(annotations);
-        
-    svg.append("g")
-        .attr("class", "annotation-group")
-        .call(makeAnnotations);
 }
 
 const tooltip = d3.select("#container")
@@ -159,7 +280,70 @@ const tooltip = d3.select("#container")
 
 // Initially, render the chart with the top ten wins data
 renderChart(temp);
+// Function to handle form submission and apply filter
+function handleFilterFormSubmit(event, data) {
+    event.preventDefault();
 
+    const form = event.target;
+    const startYear = Number(form.startYear.value);
+    const endYear = Number(form.endYear.value);
+
+    return fetch("results.csv")
+        .then(response => response.text())
+        .then(csvText => {
+            const data = d3.csvParse(csvText);
+
+            const winsByCountry = {};
+            data.forEach(d => {
+                const homeTeam = d.home_team;
+                const awayTeam = d.away_team;
+                const homeScore = +d.home_score; // Convert to a number
+                const awayScore = +d.away_score; // Convert to a number
+                const date = d.date;
+                const year = +date.substring(0,4)
+
+                // Check if the match resulted in a draw
+                if (homeScore === awayScore) {
+                    return;
+                }
+
+                // Determine the winning team and update winsByCountry
+                const winner = homeScore > awayScore ? homeTeam : awayTeam;
+                if (winner in winsByCountry && year >= startYear && year <= endYear) {
+                    winsByCountry[winner]++;
+                } else if (year >= startYear && year <= endYear) {
+                    winsByCountry[winner] = 1;
+                }
+            });
+
+            const topTenWins = Object.entries(winsByCountry)
+                .map(([country, wins]) => ({ country, wins }))
+                .sort((a, b) => b.wins - a.wins)
+                .slice(0, 10);
+            console.log("in the update");
+            console.log(topTenWins);
+            renderChart(topTenWins);
+            return topTenWins;
+        })
+        .catch(error => {
+            console.error("Error fetching or processing CSV:", error);
+            throw error; // Propagate the error to the caller if needed.
+        });
+        
+
+}
+
+
+const filterForm = document.getElementById("filterForm");
+filterForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+  
+    // Wait for the promise to resolve and get the data
+    const temp = await calculateTopTenWins2();
+  
+    // Now you have the data, so you can call the function with it
+    handleFilterFormSubmit(event, temp);
+  });
 
 // Function to handle the "Next" button click
 function handleNextButtonClick() {
@@ -169,15 +353,5 @@ function handleNextButtonClick() {
     // renderFilterPage();
 }
 
-function handleBackButtonClick() {
-    // Render the filter page with the interactive chart
-    console.log("clicked back")
-    window.location.href = 'index.html';
-    // renderFilterPage();
-}
-
 const nextButton = document.getElementById("nextButton");
 nextButton.addEventListener("click", handleNextButtonClick);
-
-const backButton = document.getElementById("backButton");
-backButton.addEventListener("click", handleBackButtonClick);
