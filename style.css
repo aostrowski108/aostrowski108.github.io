@@ -8,3 +8,23 @@ body {
 #helloWorldContainer {
     margin-top: 100px;
 }
+
+/* Add custom styles for the buttons */
+#backButton,
+#nextButton {
+    font-size: 16px;
+    padding: 8px 16px;
+}
+
+/* Position the container at the bottom of the page */
+#bottomButtons {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Adjust the spacing between the buttons */
+#bottomButtons button {
+    margin: 0 10px;
+}

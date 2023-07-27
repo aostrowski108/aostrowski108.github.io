@@ -211,7 +211,7 @@ const svg = d3.select('#container')
     .attr("viewBox", [0, 0, width, height]);
 
 function renderChart(data) {
-    data.sort((a, b) => d3.descending(a.wins, b.wins));
+    data.sort((a, b) => d3.ascending(a.wins, b.wins));
     const x = d3.scaleBand()
         .domain(d3.range(data.length))
         .range([margin.left, width - margin.right])
@@ -333,27 +333,17 @@ function handleFilterFormSubmit(event, data) {
 
 }
 
-function filterDataByYearRange(data, startYear, endYear) {
-    if (!startYear || !endYear) {
-      return data;
-    }
-  
-    return data.filter(d => {
-      const year = Number(d.year); // Assuming you have a 'year' property in the data
-      return year >= startYear && year <= endYear;
-    });
-  }
 
-const filterForm = document.getElementById("filterForm");
-filterForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
+// const filterForm = document.getElementById("filterForm");
+// filterForm.addEventListener("submit", async (event) => {
+//     event.preventDefault();
   
-    // Wait for the promise to resolve and get the data
-    const temp = await calculateTopTenWins2();
+//     // Wait for the promise to resolve and get the data
+//     const temp = await calculateTopTenWins2();
   
-    // Now you have the data, so you can call the function with it
-    handleFilterFormSubmit(event, temp);
-  });
+//     // Now you have the data, so you can call the function with it
+//     handleFilterFormSubmit(event, temp);
+//   });
 
 // Function to handle the "Next" button click
 function handleNextButtonClick() {
